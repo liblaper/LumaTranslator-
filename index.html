@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🌐 LumoTranslate — Open Source Web Translator</title>
+<style>
+/* ====== RESET & BASE ====== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0a12;
+  --bg2: #12121e;
+  --surface: rgba(255,255,255,0.04);
+  --surface-hover: rgba(255,255,255,0.08);
+  --glass: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.08);
+  --text: #e8e8f0;
+  --text2: #9898b0;
+  --accent: #00d4ff;
+  --accent2: #7c4dff;
+  --accent-glow: rgba(0,212,255,0.15);
+  --shadow: rgba(0,0,0,0.4);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+[data-theme="light"] {
+  --bg: #f0f0f8;
+  --bg2: #e4e4f0;
+  --surface: rgba(0,0,0,0.03);
+  --surface-hover: rgba(0,0,0,0.06);
+  --glass: rgba(255,255,255,0.7);
+  --glass-border: rgba(0,0,0,0.08);
+  --text: #1a1a2e;
+  --text2: #5a5a7a;
+  --accent: #0066ff;
+  --accent2: #7c4dff;
+  --accent-glow: rgba(0,102,255,0.1);
+  --shadow: rgba(0,0,0,0.08);
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background var(--transition), color var(--transition);
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+::selection { background: var(--accent); color: #000; }
+ 
+/* ====== ANIMATED BG ====== */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(0,212,255,0.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(124,77,255,0.04) 0%, transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(0,212,255,0.02) 0%, transparent 50%);
+  pointer-events: none;
+}
+ 
+/* ====== CONTAINER ====== */
+.app-container {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 820px;
+  padding: 20px 16px 40px;
+  display: flex; flex-direction: column;
+  gap: 20px;
+}
+ 
+/* ====== HEADER ====== */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 0;
+}
+.header-left {
+  display: flex; align-items: center; gap: 10px;
+}
+.header-logo {
+  font-size: 28px; line-height: 1;
+}
+.header-title {
+  font-size: 20px; font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.3px;
+}
+.header-badge {
+  font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px;
+  -webkit-text-fill-color: var(--text2);
+}
+.header-actions { display: flex; align-items: center; gap: 8px; }
+ 
+/* ====== THEME TOGGLE ====== */
+.theme-toggle {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  color: var(--text);
+  font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.theme-toggle:hover {
+  background: var(--surface-hover);
+  transform: scale(1.05);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+.theme-toggle:active { transform: scale(0.95); }
+ 
+/* ====== SOURCE LINK ====== */
+.source-link {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  color: var(--text2);
+  font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none;
+  transition: all var(--transition);
+}
+.source-link:hover {
+  background: var(--surface-hover);
+  transform: scale(1.05);
+  border-color: var(--accent2);
+  color: var(--accent);
+}
+ 
+/* ====== TABS ====== */
+.tabs {
+  display: flex; gap: 4px;
+  padding: 4px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(12px);
+}
+.tab-btn {
+  flex: 1; padding: 10px 16px;
+  border: none; border-radius: 8px;
+  background: transparent;
+  color: var(--text2);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  transition: all var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.tab-btn:hover { color: var(--text); background: var(--surface-hover); }
+.tab-btn.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: 600;
+  box-shadow: 0 4px 15px var(--accent-glow);
+}
+ 
+/* ====== CARD ====== */
+.card {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: 0 8px 32px var(--shadow);
+  transition: background var(--transition), border-color var(--transition);
+}
+ 
+/* ====== TRANSLATOR GRID ====== */
+.translator-grid {
+  display: flex; flex-direction: column;
+  gap: 12px;
+}
+ 
+/* ====== LANGUAGE ROW ====== */
+.lang-row {
+  display: flex; align-items: center; gap: 8px;
+}
+.lang-select {
+  flex: 1; padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px; font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+.lang-select:hover { border-color: var(--accent); }
+.lang-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.lang-select optgroup { background: var(--bg2); color: var(--text); }
+.lang-select option { background: var(--bg2); color: var(--text); }
+ 
+.swap-btn {
+  min-width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  color: var(--text2);
+  font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+.swap-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: rotate(180deg);
+}
+ 
+/* ====== TEXTAREAS ====== */
+.textareas {
+  display: flex; flex-direction: column;
+  gap: 8px;
+}
+.textarea-wrapper {
+  position: relative;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  transition: border-color var(--transition);
+}
+.textarea-wrapper:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.textarea-wrapper textarea {
+  width: 100%; min-height: 120px;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  transition: color var(--transition);
+}
+.textarea-wrapper textarea::placeholder { color: var(--text2); opacity: 0.5; }
+.textarea-wrapper textarea:focus { outline: none; }
+.textarea-wrapper .char-count {
+  position: absolute;
+  bottom: 8px; right: 12px;
+  font-size: 11px; color: var(--text2); opacity: 0.5;
+  pointer-events: none;
+}
+ 
+/* ====== OUTPUT ====== */
+.output-area {
+  min-height: 120px;
+  padding: 14px 16px;
+  font-size: 15px; line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap; word-wrap: break-word;
+}
+.output-area .placeholder {
+  color: var(--text2); opacity: 0.4;
+}
+.output-area .loading {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--accent);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+ 
+/* ====== ACTION BUTTONS ====== */
+.actions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.action-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  color: var(--text2);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: all var(--transition);
+}
+.action-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  color: var(--text);
+}
+.action-btn.primary {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.action-btn.primary:hover {
+  box-shadow: 0 4px 20px var(--accent-glow);
+  transform: translateY(-1px);
+}
+ 
+/* ====== URL INPUT (PAGE TAB) ====== */
+.url-input-group {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.url-input-wrapper {
+  display: flex; gap: 8px;
+  align-items: stretch;
+}
+.url-input-wrapper input {
+  flex: 1; padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  transition: all var(--transition);
+}
+.url-input-wrapper input::placeholder { color: var(--text2); opacity: 0.5; }
+.url-input-wrapper input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.url-input-wrapper .action-btn { border-radius: var(--radius-sm); }
+ 
+/* ====== IFRAME AREA ====== */
+.iframe-area {
+  width: 100%; min-height: 400px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  overflow: hidden;
+  position: relative;
+}
+.iframe-area iframe {
+  width: 100%; height: 400px;
+  border: none;
+  background: #fff;
+}
+.iframe-area .iframe-placeholder {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 20px;
+  color: var(--text2);
+  text-align: center;
+  gap: 8px;
+  min-height: 200px;
+}
+.iframe-area .iframe-placeholder .big-emoji { font-size: 48px; }
+.iframe-area .iframe-placeholder p { font-size: 14px; opacity: 0.6; }
+ 
+/* ====== FOOTER ====== */
+.footer {
+  padding: 20px 0;
+  text-align: center;
+  border-top: 1px solid var(--glass-border);
+  margin-top: 8px;
+}
+.footer p {
+  font-size: 12px; color: var(--text2); opacity: 0.5;
+}
+.footer .heart { color: #ff4060; }
+.footer a {
+  color: var(--accent); text-decoration: none;
+  transition: opacity var(--transition);
+}
+.footer a:hover { opacity: 0.8; text-decoration: underline; }
+ 
+/* ====== TOAST ====== */
+.toast-container {
+  position: fixed; bottom: 24px; right: 24px;
+  z-index: 999;
+  display: flex; flex-direction: column;
+  gap: 8px; pointer-events: none;
+}
+.toast {
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  font-size: 13px;
+  box-shadow: 0 8px 32px var(--shadow);
+  animation: slideUp 0.3s ease, fadeOut 0.3s ease 2.5s forwards;
+  pointer-events: auto;
+  display: flex; align-items: center; gap: 8px;
+}
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateX(20px); }
+}
+ 
+/* ====== RESPONSIVE ====== */
+@media (max-width: 600px) {
+  .app-container { padding: 12px 12px 32px; }
+  .header-title { font-size: 17px; }
+  .header-logo { font-size: 22px; }
+  .card { padding: 14px; }
+  .textarea-wrapper textarea { min-height: 90px; font-size: 14px; }
+  .output-area { min-height: 90px; font-size: 14px; }
+  .lang-select { font-size: 13px; padding: 8px 10px; }
+  .url-input-wrapper { flex-direction: column; }
+  .iframe-area { min-height: 300px; }
+  .iframe-area iframe { height: 300px; }
+  .actions { gap: 6px; }
+  .action-btn { padding: 7px 12px; font-size: 12px; }
+  .tab-btn { font-size: 13px; padding: 8px 12px; }
+}
+@media (max-width: 400px) {
+  .header { flex-wrap: wrap; gap: 8px; }
+  .header-title { font-size: 15px; }
+  .theme-toggle, .source-link { width: 38px; height: 38px; font-size: 16px; }
+}
+</style>
+</head>
+<body>
+ 
+<div class="bg-grid"></div>
+ 
+<div class="app-container">
+ 
+  <!-- ====== HEADER ====== -->
+  <header class="header">
+    <div class="header-left">
+      <span class="header-logo">🌐</span>
+      <span class="header-title">LumoTranslate</span>
+      <span class="header-badge">open source</span>
+    </div>
+    <div class="header-actions">
+      <a href="https://github.com" target="_blank" rel="noopener" class="source-link" title="Ver en GitHub" aria-label="Ver código fuente">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+      </a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Cambiar modo oscuro/claro">
+        <span id="themeIcon">🌙</span>
+      </button>
+    </div>
+  </header>
+ 
+  <!-- ====== TABS ====== -->
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" role="tab" data-tab="text" aria-selected="true">
+      📝 Texto
+    </button>
+    <button class="tab-btn" role="tab" data-tab="page" aria-selected="false">
+      🌐 Página Web
+    </button>
+  </div>
+ 
+  <!-- ====== TAB: TEXT ====== -->
+  <div class="card" id="tabText" role="tabpanel">
+    <div class="translator-grid">
+      <!-- Language row -->
+      <div class="lang-row">
+        <select class="lang-select" id="sourceLang">
+          <optgroup label="✨ Detección automática">
+            <option value="auto">🌍 Auto-detectar</option>
+          </optgroup>
+          <optgroup label="🌎 Idiomas">
+            <option value="en">🇬🇧 Inglés</option>
+            <option value="es" selected>🇪🇸 Español</option>
+            <option value="fr">🇫🇷 Francés</option>
+            <option value="de">🇩🇪 Alemán</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="pt">🇵🇹 Portugués</option>
+            <option value="ru">🇷🇺 Ruso</option>
+            <option value="ja">🇯🇵 Japonés</option>
+            <option value="ko">🇰🇷 Coreano</option>
+            <option value="zh">🇨🇳 Chino</option>
+            <option value="ar">🇸🇦 Árabe</option>
+            <option value="hi">🇮🇳 Hindi</option>
+            <option value="nl">🇳🇱 Neerlandés</option>
+            <option value="pl">🇵🇱 Polaco</option>
+            <option value="sv">🇸🇪 Sueco</option>
+            <option value="tr">🇹🇷 Turco</option>
+            <option value="vi">🇻🇳 Vietnamita</option>
+            <option value="th">🇹🇭 Tailandés</option>
+            <option value="ro">🇷🇴 Rumano</option>
+            <option value="cs">🇨🇿 Checo</option>
+            <option value="el">🇬🇷 Griego</option>
+            <option value="uk">🇺🇦 Ucraniano</option>
+            <option value="hu">🇭🇺 Húngaro</option>
+            <option value="da">🇩🇰 Danés</option>
+            <option value="fi">🇫🇮 Finlandés</option>
+            <option value="no">🇳🇴 Noruego</option>
+            <option value="id">🇮🇩 Indonesio</option>
+            <option value="ms">🇲🇾 Malayo</option>
+          </optgroup>
+        </select>
+        <button class="swap-btn" id="swapLangs" title="Intercambiar idiomas" aria-label="Intercambiar idiomas">🔄</button>
+        <select class="lang-select" id="targetLang">
+          <optgroup label="🎯 Idioma destino">
+            <option value="en">🇬🇧 Inglés</option>
+            <option value="es" selected>🇪🇸 Español</option>
+            <option value="fr">🇫🇷 Francés</option>
+            <option value="de">🇩🇪 Alemán</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="pt">🇵🇹 Portugués</option>
+            <option value="ru">🇷🇺 Ruso</option>
+            <option value="ja">🇯🇵 Japonés</option>
+            <option value="ko">🇰🇷 Coreano</option>
+            <option value="zh">🇨🇳 Chino</option>
+            <option value="ar">🇸🇦 Árabe</option>
+            <option value="hi">🇮🇳 Hindi</option>
+            <option value="nl">🇳🇱 Neerlandés</option>
+            <option value="pl">🇵🇱 Polaco</option>
+            <option value="sv">🇸🇪 Sueco</option>
+            <option value="tr">🇹🇷 Turco</option>
+            <option value="vi">🇻🇳 Vietnamita</option>
+            <option value="th">🇹🇭 Tailandés</option>
+            <option value="ro">🇷🇴 Rumano</option>
+            <option value="cs">🇨🇿 Checo</option>
+            <option value="el">🇬🇷 Griego</option>
+            <option value="uk">🇺🇦 Ucraniano</option>
+            <option value="hu">🇭🇺 Húngaro</option>
+            <option value="da">🇩🇰 Danés</option>
+            <option value="fi">🇫🇮 Finlandés</option>
+            <option value="no">🇳🇴 Noruego</option>
+            <option value="id">🇮🇩 Indonesio</option>
+            <option value="ms">🇲🇾 Malayo</option>
+          </optgroup>
+        </select>
+      </div>
+ 
+      <!-- Input -->
+      <div class="textareas">
+        <div class="textarea-wrapper">
+          <textarea id="sourceText" placeholder="Escribe o pega texto aquí… ✍️" aria-label="Texto a traducir" maxlength="5000"></textarea>
+          <span class="char-count" id="charCount">0 / 5000</span>
+        </div>
+        <!-- Output -->
+        <div class="textarea-wrapper">
+          <div class="output-area" id="outputArea">
+            <span class="placeholder">🌉 La traducción aparecerá aquí…</span>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- Actions -->
+      <div class="actions">
+        <button class="action-btn primary" id="translateBtn">🚀 Traducir</button>
+        <button class="action-btn" id="clearBtn">🗑️ Limpiar</button>
+        <button class="action-btn" id="copyBtn">📋 Copiar</button>
+        <button class="action-btn" id="speakBtn">🔊 Escuchar</button>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ====== TAB: PAGE ====== -->
+  <div class="card" id="tabPage" role="tabpanel" hidden>
+    <div class="translator-grid">
+      <div class="lang-row">
+        <select class="lang-select" id="pageLang">
+          <option value="es" selected>🇪🇸 Español</option>
+          <option value="en">🇬🇧 Inglés</option>
+          <option value="fr">🇫🇷 Francés</option>
+          <option value="de">🇩🇪 Alemán</option>
+          <option value="it">🇮🇹 Italiano</option>
+          <option value="pt">🇵🇹 Portugués</option>
+          <option value="ru">🇷🇺 Ruso</option>
+          <option value="ja">🇯🇵 Japonés</option>
+          <option value="ko">🇰🇷 Coreano</option>
+          <option value="zh">🇨🇳 Chino</option>
+          <option value="ar">🇸🇦 Árabe</option>
+        </select>
+      </div>
+ 
+      <div class="url-input-group">
+        <div class="url-input-wrapper">
+          <input type="url" id="pageUrl" placeholder="https://ejemplo.com/articulo" aria-label="URL de la página a traducir" autocomplete="url" spellcheck="false">
+          <button class="action-btn primary" id="translatePageBtn">🌐 Traducir</button>
+        </div>
+      </div>
+ 
+      <div class="iframe-area" id="iframeArea">
+        <div class="iframe-placeholder" id="iframePlaceholder">
+          <span class="big-emoji">🔗</span>
+          <p>Ingresá una URL y presioná <strong>Traducir</strong></p>
+          <p style="font-size:12px;opacity:0.4;">La página traducida se abrirá aquí mismo 📟</p>
+        </div>
+        <iframe id="pageFrame" style="display:none;" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ====== FOOTER ====== -->
+  <footer class="footer">
+    <p>
+      Hecho con <span class="heart">❤️</span> por <a href="https://github.com" target="_blank" rel="noopener">LO &amp; ENI</a> &nbsp;·&nbsp;
+      🌐 <a href="https://libretranslate.com" target="_blank" rel="noopener">LibreTranslate</a> powering translations
+      <br>
+      <span style="font-size:11px;">📦 100% open source · single-file · sin servidores · sin tracking</span>
+    </p>
+  </footer>
+</div>
+ 
+<!-- ====== TOAST CONTAINER ====== -->
+<div class="toast-container" id="toastContainer"></div>
+ 
+<script>
+(function(){
+  'use strict';
+ 
+  // ====== STATE ======
+  const state = {
+    theme: localStorage.getItem('lumotheme') || 'dark',
+    source: 'auto',
+    target: 'es'
+  };
+ 
+  // ====== DOM REFS ======
+  const $ = id => document.getElementById(id);
+  const themeToggle = $('themeToggle');
+  const themeIcon = $('themeIcon');
+  const sourceLang = $('sourceLang');
+  const targetLang = $('targetLang');
+  const swapBtn = $('swapLangs');
+  const sourceText = $('sourceText');
+  const outputArea = $('outputArea');
+  const translateBtn = $('translateBtn');
+  const clearBtn = $('clearBtn');
+  const copyBtn = $('copyBtn');
+  const speakBtn = $('speakBtn');
+  const charCount = $('charCount');
+  const tabText = $('tabText');
+  const tabPage = $('tabPage');
+  const pageUrl = $('pageUrl');
+  const translatePageBtn = $('translatePageBtn');
+  const pageFrame = $('pageFrame');
+  const iframePlaceholder = $('iframePlaceholder');
+  const toastContainer = $('toastContainer');
+ 
+  // ====== THEME ======
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    themeIcon.textContent = theme === 'dark' ? '🌙' : '☀️';
+    localStorage.setItem('lumotheme', theme);
+    state.theme = theme;
+  }
+  applyTheme(state.theme);
+ 
+  themeToggle.addEventListener('click', () => {
+    applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+  });
+ 
+  // ====== TABS ======
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      const tab = btn.dataset.tab;
+      tabText.hidden = tab !== 'text';
+      tabPage.hidden = tab !== 'page';
+    });
+  });
+ 
+  // ====== CHAR COUNT ======
+  sourceText.addEventListener('input', () => {
+    const len = sourceText.value.length;
+    charCount.textContent = `${len} / 5000`;
+  });
+ 
+  // ====== SWAP LANGUAGES ======
+  swapBtn.addEventListener('click', () => {
+    const src = sourceLang.value;
+    const tgt = targetLang.value;
+    if (src === 'auto') {
+      showToast('⚠️ Seleccioná un idioma origen para intercambiar', 'warning');
+      return;
+    }
+    sourceLang.value = tgt;
+    targetLang.value = src;
+    state.source = tgt;
+    state.target = src;
+    // Swap text content too
+    const inputText = sourceText.value;
+    const outputText = outputArea.textContent;
+    if (outputText && !outputArea.querySelector('.placeholder') && !outputArea.querySelector('.loading')) {
+      sourceText.value = outputText;
+      outputArea.innerHTML = `<span class="placeholder">🌉 Traducción intercambiada…</span>`;
+    }
+    charCount.textContent = `${sourceText.value.length} / 5000`;
+    showToast('🔄 Idiomas intercambiados', 'success');
+  });
+ 
+  // ====== TRANSLATION API ======
+  const TRANSLATE_API = 'https://libretranslate.com/translate';
+  const DETECT_API = 'https://libretranslate.com/detect';
+ 
+  async function translateText(text, source, target) {
+    if (!text.trim()) throw new Error('📭 No hay texto para traducir');
+ 
+    let detectedSource = source;
+    if (source === 'auto' && text.trim().length > 2) {
+      try {
+        const detectRes = await fetch(DETECT_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ q: text.substring(0, 200) })
+        });
+        if (detectRes.ok) {
+          const detectData = await detectRes.json();
+          if (detectData && detectData.length > 0) {
+            detectedSource = detectData[0].language;
+          }
+        }
+      } catch (e) {
+        // fallback: just use auto
+        console.warn('Detection failed, using auto', e);
+      }
+    }
+ 
+    const res = await fetch(TRANSLATE_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        q: text,
+        source: detectedSource === 'auto' ? 'auto' : detectedSource,
+        target: target,
+        format: 'text'
+      })
+    });
+ 
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(`⚠️ Error del servidor (${res.status})${errText ? ': ' + errText : ''}`);
+    }
+ 
+    const data = await res.json();
+    return data.translatedText || '';
+  }
+ 
+  // ====== TRANSLATE ======
+  async function performTranslation() {
+    const text = sourceText.value.trim();
+    if (!text) {
+      showToast('📝 Escribí algo para traducir', 'warning');
+      sourceText.focus();
+      return;
+    }
+ 
+    const source = sourceLang.value;
+    const target = targetLang.value;
+ 
+    outputArea.innerHTML = `<div class="loading">⏳ Traduciendo <span style="font-size:10px;">⋯</span></div>`;
+ 
+    try {
+      const result = await translateText(text, source, target);
+      outputArea.textContent = result;
+      showToast('✅ Traducción completada', 'success');
+    } catch (err) {
+      console.error('Translation error:', err);
+      outputArea.innerHTML = `<span style="color:#ff4060;">❌ ${err.message}</span>`;
+      showToast(`❌ ${err.message}`, 'error');
+    }
+  }
+ 
+  translateBtn.addEventListener('click', performTranslation);
+ 
+  // Ctrl/Cmd + Enter shortcut
+  sourceText.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      performTranslation();
+    }
+  });
+ 
+  // ====== CLEAR ======
+  clearBtn.addEventListener('click', () => {
+    sourceText.value = '';
+    outputArea.innerHTML = `<span class="placeholder">🌉 La traducción aparecerá aquí…</span>`;
+    charCount.textContent = `0 / 5000`;
+    sourceText.focus();
+  });
+ 
+  // ====== COPY ======
+  copyBtn.addEventListener('click', async () => {
+    const text = outputArea.textContent;
+    if (!text || outputArea.querySelector('.placeholder') || outputArea.querySelector('.loading')) {
+      showToast('📭 No hay nada para copiar', 'warning');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('📋 Copiado al portapapeles', 'success');
+    } catch {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast('📋 Copiado al portapapeles', 'success');
+    }
+  });
+ 
+  // ====== SPEAK ======
+  speakBtn.addEventListener('click', () => {
+    const text = outputArea.textContent;
+    if (!text || outputArea.querySelector('.placeholder') || outputArea.querySelector('.loading')) {
+      showToast('🔇 No hay texto para leer', 'warning');
+      return;
+    }
+    if (!window.speechSynthesis) {
+      showToast('🔇 Tu navegador no soporta síntesis de voz', 'error');
+      return;
+    }
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const targetLangVal = targetLang.value;
+    // Map codes to BCP 47 tags
+    const langMap = {
+      'en': 'en-US', 'es': 'es-ES', 'fr': 'fr-FR', 'de': 'de-DE',
+      'it': 'it-IT', 'pt': 'pt-PT', 'ru': 'ru-RU', 'ja': 'ja-JP',
+      'ko': 'ko-KR', 'zh': 'zh-CN', 'ar': 'ar-SA', 'hi': 'hi-IN',
+      'nl': 'nl-NL', 'pl': 'pl-PL', 'sv': 'sv-SE', 'tr': 'tr-TR',
+      'vi': 'vi-VN', 'th': 'th-TH', 'ro': 'ro-RO', 'cs': 'cs-CZ',
+      'el': 'el-GR', 'uk': 'uk-UA', 'hu': 'hu-HU', 'da': 'da-DK',
+      'fi': 'fi-FI', 'no': 'nb-NO', 'id': 'id-ID', 'ms': 'ms-MY'
+    };
+    utterance.lang = langMap[targetLangVal] || 'es-ES';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.onstart = () => showToast('🔊 Reproduciendo…', 'success');
+    utterance.onend = () => showToast('✅ Reproducción finalizada', 'success');
+    utterance.onerror = () => showToast('🔇 Error al reproducir', 'error');
+    window.speechSynthesis.speak(utterance);
+  });
+ 
+  // ====== PAGE TRANSLATION ======
+  function translatePage() {
+    let url = pageUrl.value.trim();
+    if (!url) {
+      showToast('🔗 Ingresá una URL', 'warning');
+      pageUrl.focus();
+      return;
+    }
+    // Add https:// if missing
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url;
+      pageUrl.value = url;
+    }
+    // Basic URL validation
+    try { new URL(url); } catch {
+      showToast('❌ URL inválida. Probá con https://ejemplo.com', 'error');
+      return;
+    }
+ 
+    const target = pageLang.value;
+    // Use Google Translate's proxy — it's the most reliable way
+    // Google Translate proxy URL format:
+    const proxyUrl = `https://translate.google.com/translate?hl=${target}&sl=auto&tl=${target}&u=${encodeURIComponent(url)}&sandbox=1`;
+ 
+    iframePlaceholder.style.display = 'none';
+    pageFrame.style.display = 'block';
+    pageFrame.src = proxyUrl;
+ 
+    showToast(`🌐 Traduciendo página a ${pageLang.options[pageLang.selectedIndex].text}`, 'success');
+  }
+ 
+  translatePageBtn.addEventListener('click', translatePage);
+  pageUrl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      translatePage();
+    }
+  });
+ 
+  // ====== TOAST SYSTEM ======
+  function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+      if (toast.parentNode) toast.remove();
+    }, 3000);
+  }
+ 
+  // ====== AUTO-SAVE LANGUAGE PREFS ======
+  sourceLang.addEventListener('change', () => { state.source = sourceLang.value; });
+  targetLang.addEventListener('change', () => { state.target = targetLang.value; });
+ 
+  // ====== INITIAL FOCUS ======
+  sourceText.focus();
+ 
+  // ====== MOBILE FRIENDLY: hide iframe on scroll ======
+  // (handled by CSS)
+ 
+  console.log('🌐 LumoTranslate loaded. Happy translating!');
+  console.log('📖 Open source — contribute at https://github.com/your-org/lumotranslate');
+})();
+</script>
+</body>
+</html>
