@@ -2,10 +2,19 @@
 <html lang="es" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LumoTranslate - Traductor web open source. Traduce texto y páginas web con LibreTranslate. Sin tracking, sin servidores propios.">
+<meta name="theme-color" content="#0a0a12">
+<meta property="og:title" content="LumoTranslate - Open Source Web Translator">
+<meta property="og:description" content="Traduce texto y páginas web con LibreTranslate. 100% open source, sin tracking.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://github.com/liblaper/LumaTranslator">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="LumoTranslate - Open Source Web Translator">
+<meta name="twitter:description" content="Traduce texto y páginas web con LibreTranslate. 100% open source, sin tracking.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
 <title>🌐 LumoTranslate — Open Source Web Translator</title>
 <style>
-/* ====== RESET & BASE ====== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg: #0a0a12;
@@ -18,6 +27,9 @@
   --text2: #9898b0;
   --accent: #00d4ff;
   --accent2: #7c4dff;
+  --success: #00e676;
+  --warning: #ffab00;
+  --error: #ff4060;
   --accent-glow: rgba(0,212,255,0.15);
   --shadow: rgba(0,0,0,0.4);
   --radius: 16px;
@@ -35,6 +47,9 @@
   --text2: #5a5a7a;
   --accent: #0066ff;
   --accent2: #7c4dff;
+  --success: #00c853;
+  --warning: #ff8f00;
+  --error: #d50000;
   --accent-glow: rgba(0,102,255,0.1);
   --shadow: rgba(0,0,0,0.08);
 }
@@ -51,8 +66,7 @@ body {
   align-items: center;
 }
 ::selection { background: var(--accent); color: #000; }
- 
-/* ====== ANIMATED BG ====== */
+
 .bg-grid {
   position: fixed; inset: 0; z-index: 0;
   background-image:
@@ -61,17 +75,15 @@ body {
     radial-gradient(circle at 50% 80%, rgba(0,212,255,0.02) 0%, transparent 50%);
   pointer-events: none;
 }
- 
-/* ====== CONTAINER ====== */
+
 .app-container {
   position: relative; z-index: 1;
   width: 100%; max-width: 820px;
   padding: 20px 16px 40px;
   display: flex; flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
- 
-/* ====== HEADER ====== */
+
 .header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 0;
@@ -98,9 +110,8 @@ body {
   -webkit-text-fill-color: var(--text2);
 }
 .header-actions { display: flex; align-items: center; gap: 8px; }
- 
-/* ====== THEME TOGGLE ====== */
-.theme-toggle {
+
+.icon-btn {
   width: 44px; height: 44px;
   border-radius: 50%;
   border: 1px solid var(--glass-border);
@@ -109,39 +120,83 @@ body {
   color: var(--text);
   font-size: 20px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
+  text-decoration: none;
   transition: all var(--transition);
   position: relative;
   overflow: hidden;
 }
-.theme-toggle:hover {
+.icon-btn:hover {
   background: var(--surface-hover);
   transform: scale(1.05);
   border-color: var(--accent);
   box-shadow: 0 0 20px var(--accent-glow);
 }
-.theme-toggle:active { transform: scale(0.95); }
- 
-/* ====== SOURCE LINK ====== */
-.source-link {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  border: 1px solid var(--glass-border);
+.icon-btn:active { transform: scale(0.95); }
+.icon-btn.source-link { color: var(--text2); }
+.icon-btn.source-link:hover { border-color: var(--accent2); color: var(--accent); }
+.icon-btn.settings-btn { font-size: 18px; }
+.icon-btn.settings-btn.active {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  transform: rotate(60deg);
+}
+
+.settings-card {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  padding: 0 20px;
   background: var(--glass);
-  backdrop-filter: blur(12px);
-  color: var(--text2);
-  font-size: 18px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  text-decoration: none;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px var(--shadow);
   transition: all var(--transition);
 }
-.source-link:hover {
-  background: var(--surface-hover);
-  transform: scale(1.05);
-  border-color: var(--accent2);
-  color: var(--accent);
+.settings-card.open {
+  max-height: 80vh;
+  opacity: 1;
+  padding: 20px;
+  overflow-y: auto;
 }
- 
-/* ====== TABS ====== */
+.settings-title {
+  font-size: 14px; font-weight: 600;
+  color: var(--text2); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+.settings-row {
+  display: flex; gap: 8px;
+  align-items: stretch;
+  margin-bottom: 8px;
+}
+.settings-row input {
+  flex: 1; padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 13px;
+  font-family: monospace;
+  transition: all var(--transition);
+}
+.settings-row input::placeholder { color: var(--text2); opacity: 0.5; }
+.settings-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.settings-hint {
+  font-size: 11px; color: var(--text2); opacity: 0.5;
+  margin-top: 4px;
+}
+.settings-status {
+  font-size: 12px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: none;
+}
+.settings-status.visible { display: block; }
+.settings-status.ok { background: rgba(0,230,118,0.1); color: var(--success); }
+.settings-status.err { background: rgba(255,64,96,0.1); color: var(--error); }
+
 .tabs {
   display: flex; gap: 4px;
   padding: 4px;
@@ -166,8 +221,7 @@ body {
   font-weight: 600;
   box-shadow: 0 4px 15px var(--accent-glow);
 }
- 
-/* ====== CARD ====== */
+
 .card {
   background: var(--glass);
   backdrop-filter: blur(20px);
@@ -178,19 +232,18 @@ body {
   box-shadow: 0 8px 32px var(--shadow);
   transition: background var(--transition), border-color var(--transition);
 }
- 
-/* ====== TRANSLATOR GRID ====== */
+
 .translator-grid {
   display: flex; flex-direction: column;
   gap: 12px;
 }
- 
-/* ====== LANGUAGE ROW ====== */
+
 .lang-row {
   display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap;
 }
 .lang-select {
-  flex: 1; padding: 10px 12px;
+  flex: 1; min-width: 120px; padding: 10px 12px;
   background: var(--surface);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
@@ -209,7 +262,7 @@ body {
 .lang-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 .lang-select optgroup { background: var(--bg2); color: var(--text); }
 .lang-select option { background: var(--bg2); color: var(--text); }
- 
+
 .swap-btn {
   min-width: 40px; height: 40px;
   border-radius: 50%;
@@ -227,8 +280,20 @@ body {
   color: var(--accent);
   transform: rotate(180deg);
 }
- 
-/* ====== TEXTAREAS ====== */
+
+.detected-badge {
+  font-size: 11px;
+  color: var(--accent);
+  background: rgba(0,212,255,0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  display: none;
+  align-items: center;
+  gap: 4px;
+}
+.detected-badge.visible { display: inline-flex; }
+
 .textareas {
   display: flex; flex-direction: column;
   gap: 8px;
@@ -264,8 +329,7 @@ body {
   font-size: 11px; color: var(--text2); opacity: 0.5;
   pointer-events: none;
 }
- 
-/* ====== OUTPUT ====== */
+
 .output-area {
   min-height: 120px;
   padding: 14px 16px;
@@ -281,12 +345,20 @@ body {
   color: var(--accent);
   animation: pulse 1.2s ease-in-out infinite;
 }
+.output-area .detected-info {
+  display: block;
+  font-size: 11px;
+  color: var(--text2);
+  opacity: 0.6;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--glass-border);
+}
 @keyframes pulse {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
 }
- 
-/* ====== ACTION BUTTONS ====== */
+
 .actions {
   display: flex; gap: 8px; flex-wrap: wrap;
 }
@@ -315,8 +387,12 @@ body {
   box-shadow: 0 4px 20px var(--accent-glow);
   transform: translateY(-1px);
 }
- 
-/* ====== URL INPUT (PAGE TAB) ====== */
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .url-input-group {
   display: flex; flex-direction: column; gap: 8px;
 }
@@ -335,35 +411,55 @@ body {
 }
 .url-input-wrapper input::placeholder { color: var(--text2); opacity: 0.5; }
 .url-input-wrapper input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-.url-input-wrapper .action-btn { border-radius: var(--radius-sm); }
- 
-/* ====== IFRAME AREA ====== */
-.iframe-area {
-  width: 100%; min-height: 400px;
+
+.page-services {
+  display: flex; flex-direction: column;
+  gap: 12px;
+}
+.page-preview {
+  padding: 16px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border);
   background: var(--surface);
-  overflow: hidden;
-  position: relative;
-}
-.iframe-area iframe {
-  width: 100%; height: 400px;
-  border: none;
-  background: #fff;
-}
-.iframe-area .iframe-placeholder {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 40px 20px;
+  font-size: 12px;
   color: var(--text2);
-  text-align: center;
-  gap: 8px;
-  min-height: 200px;
 }
-.iframe-area .iframe-placeholder .big-emoji { font-size: 48px; }
-.iframe-area .iframe-placeholder p { font-size: 14px; opacity: 0.6; }
- 
-/* ====== FOOTER ====== */
+.page-preview-label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text);
+  font-size: 13px;
+}
+.page-services-list {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.page-service-link {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--surface);
+  color: var(--text2);
+  font-size: 13px; font-weight: 500;
+  text-decoration: none;
+  display: flex; align-items: center; gap: 6px;
+  transition: all var(--transition);
+}
+.page-service-link:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  color: var(--text);
+}
+.page-service-link.primary {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.page-service-link.primary:hover {
+  box-shadow: 0 4px 20px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
 .footer {
   padding: 20px 0;
   text-align: center;
@@ -379,8 +475,7 @@ body {
   transition: opacity var(--transition);
 }
 .footer a:hover { opacity: 0.8; text-decoration: underline; }
- 
-/* ====== TOAST ====== */
+
 .toast-container {
   position: fixed; bottom: 24px; right: 24px;
   z-index: 999;
@@ -407,37 +502,35 @@ body {
 @keyframes fadeOut {
   to { opacity: 0; transform: translateX(20px); }
 }
- 
-/* ====== RESPONSIVE ====== */
+
 @media (max-width: 600px) {
   .app-container { padding: 12px 12px 32px; }
   .header-title { font-size: 17px; }
   .header-logo { font-size: 22px; }
   .card { padding: 14px; }
+  .settings-card.open { padding: 14px; }
   .textarea-wrapper textarea { min-height: 90px; font-size: 14px; }
   .output-area { min-height: 90px; font-size: 14px; }
   .lang-select { font-size: 13px; padding: 8px 10px; }
   .url-input-wrapper { flex-direction: column; }
-  .iframe-area { min-height: 300px; }
-  .iframe-area iframe { height: 300px; }
   .actions { gap: 6px; }
   .action-btn { padding: 7px 12px; font-size: 12px; }
   .tab-btn { font-size: 13px; padding: 8px 12px; }
+  .detected-badge { font-size: 10px; padding: 2px 8px; }
 }
 @media (max-width: 400px) {
   .header { flex-wrap: wrap; gap: 8px; }
   .header-title { font-size: 15px; }
-  .theme-toggle, .source-link { width: 38px; height: 38px; font-size: 16px; }
+  .icon-btn { width: 38px; height: 38px; font-size: 16px; }
 }
 </style>
 </head>
 <body>
- 
+
 <div class="bg-grid"></div>
- 
+
 <div class="app-container">
- 
-  <!-- ====== HEADER ====== -->
+
   <header class="header">
     <div class="header-left">
       <span class="header-logo">🌐</span>
@@ -445,16 +538,32 @@ body {
       <span class="header-badge">open source</span>
     </div>
     <div class="header-actions">
-      <a href="https://github.com" target="_blank" rel="noopener" class="source-link" title="Ver en GitHub" aria-label="Ver código fuente">
+      <button class="icon-btn settings-btn" id="settingsToggle" aria-label="Configuración" title="Configuración de API">
+        ⚙️
+      </button>
+      <a href="https://github.com/liblaper/LumaTranslator" target="_blank" rel="noopener" class="icon-btn source-link" title="Ver en GitHub" aria-label="Ver código fuente">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
       </a>
-      <button class="theme-toggle" id="themeToggle" aria-label="Cambiar modo oscuro/claro">
+      <button class="icon-btn" id="themeToggle" aria-label="Cambiar modo oscuro/claro">
         <span id="themeIcon">🌙</span>
       </button>
     </div>
   </header>
- 
-  <!-- ====== TABS ====== -->
+
+  <div class="settings-card" id="settingsPanel">
+    <div class="settings-title">⚙️ Configuración de API</div>
+    <div class="settings-row">
+      <input type="url" id="apiEndpointInput" placeholder="https://tuserver.com" autocomplete="url" spellcheck="false">
+      <button class="action-btn primary" id="saveEndpointBtn">💾 Guardar</button>
+      <button class="action-btn" id="resetEndpointBtn">↺</button>
+    </div>
+    <div class="settings-hint">
+      📡 Usá tu propia instancia de <a href="https://github.com/LibreTranslate/LibreTranslate" target="_blank" rel="noopener" style="color:var(--accent);">LibreTranslate</a> con <code style="background:var(--surface);padding:1px 4px;border-radius:3px;">--enable-cors</code>.
+      Por defecto: <code id="defaultEndpointDisplay" style="background:var(--surface);padding:1px 4px;border-radius:3px;">translate.fedilab.app</code>
+    </div>
+    <div class="settings-status" id="settingsStatus"></div>
+  </div>
+
   <div class="tabs" role="tablist">
     <button class="tab-btn active" role="tab" data-tab="text" aria-selected="true">
       📝 Texto
@@ -463,11 +572,9 @@ body {
       🌐 Página Web
     </button>
   </div>
- 
-  <!-- ====== TAB: TEXT ====== -->
+
   <div class="card" id="tabText" role="tabpanel">
     <div class="translator-grid">
-      <!-- Language row -->
       <div class="lang-row">
         <select class="lang-select" id="sourceLang">
           <optgroup label="✨ Detección automática">
@@ -504,6 +611,7 @@ body {
             <option value="ms">🇲🇾 Malayo</option>
           </optgroup>
         </select>
+        <span class="detected-badge" id="detectedBadge"></span>
         <button class="swap-btn" id="swapLangs" title="Intercambiar idiomas" aria-label="Intercambiar idiomas">🔄</button>
         <select class="lang-select" id="targetLang">
           <optgroup label="🎯 Idioma destino">
@@ -538,22 +646,19 @@ body {
           </optgroup>
         </select>
       </div>
- 
-      <!-- Input -->
+
       <div class="textareas">
         <div class="textarea-wrapper">
           <textarea id="sourceText" placeholder="Escribe o pega texto aquí… ✍️" aria-label="Texto a traducir" maxlength="5000"></textarea>
           <span class="char-count" id="charCount">0 / 5000</span>
         </div>
-        <!-- Output -->
         <div class="textarea-wrapper">
           <div class="output-area" id="outputArea">
             <span class="placeholder">🌉 La traducción aparecerá aquí…</span>
           </div>
         </div>
       </div>
- 
-      <!-- Actions -->
+
       <div class="actions">
         <button class="action-btn primary" id="translateBtn">🚀 Traducir</button>
         <button class="action-btn" id="clearBtn">🗑️ Limpiar</button>
@@ -562,8 +667,7 @@ body {
       </div>
     </div>
   </div>
- 
-  <!-- ====== TAB: PAGE ====== -->
+
   <div class="card" id="tabPage" role="tabpanel" hidden>
     <div class="translator-grid">
       <div class="lang-row">
@@ -581,51 +685,70 @@ body {
           <option value="ar">🇸🇦 Árabe</option>
         </select>
       </div>
- 
+
       <div class="url-input-group">
         <div class="url-input-wrapper">
           <input type="url" id="pageUrl" placeholder="https://ejemplo.com/articulo" aria-label="URL de la página a traducir" autocomplete="url" spellcheck="false">
           <button class="action-btn primary" id="translatePageBtn">🌐 Traducir</button>
         </div>
+        <div class="settings-hint">Se abrirá en una nueva pestaña con el servicio de traducción seleccionado</div>
       </div>
- 
-      <div class="iframe-area" id="iframeArea">
-        <div class="iframe-placeholder" id="iframePlaceholder">
-          <span class="big-emoji">🔗</span>
-          <p>Ingresá una URL y presioná <strong>Traducir</strong></p>
-          <p style="font-size:12px;opacity:0.4;">La página traducida se abrirá aquí mismo 📟</p>
+
+      <div class="page-services" id="pageServices">
+        <div class="page-preview" id="pagePreview">
+          <div class="page-preview-label">🔗 Preview del enlace</div>
+          <div id="pagePreviewUrl" style="word-break:break-all;color:var(--accent);">Ingresá una URL para ver la traducción</div>
         </div>
-        <iframe id="pageFrame" style="display:none;" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy"></iframe>
+        <div class="page-services-list" id="pageServicesList">
+        </div>
       </div>
     </div>
   </div>
- 
-  <!-- ====== FOOTER ====== -->
+
   <footer class="footer">
     <p>
-      Hecho con <span class="heart">❤️</span> por <a href="https://github.com" target="_blank" rel="noopener">LO &amp; ENI</a> &nbsp;·&nbsp;
-      🌐 <a href="https://libretranslate.com" target="_blank" rel="noopener">LibreTranslate</a> powering translations
+      Hecho con <span class="heart">❤️</span> por <a href="https://github.com/liblaper" target="_blank" rel="noopener">liblaper</a> &nbsp;·&nbsp;
+      🌐 <a href="https://github.com/LibreTranslate/LibreTranslate" target="_blank" rel="noopener">LibreTranslate</a> powering translations
       <br>
       <span style="font-size:11px;">📦 100% open source · single-file · sin servidores · sin tracking</span>
     </p>
   </footer>
 </div>
- 
-<!-- ====== TOAST CONTAINER ====== -->
+
 <div class="toast-container" id="toastContainer"></div>
- 
+
 <script>
 (function(){
   'use strict';
- 
-  // ====== STATE ======
+
+  const DEFAULT_API_ENDPOINT = 'https://translate.fedilab.app';
+  const FALLBACK_ENDPOINTS = [
+    'https://libretranslate.com'
+  ];
+  const LANG_NAMES = {
+    en: 'Inglés', es: 'Español', fr: 'Francés', de: 'Alemán',
+    it: 'Italiano', pt: 'Portugués', ru: 'Ruso', ja: 'Japonés',
+    ko: 'Coreano', zh: 'Chino', ar: 'Árabe', hi: 'Hindi',
+    nl: 'Neerlandés', pl: 'Polaco', sv: 'Sueco', tr: 'Turco',
+    vi: 'Vietnamita', th: 'Tailandés', ro: 'Rumano', cs: 'Checo',
+    el: 'Griego', uk: 'Ucraniano', hu: 'Húngaro', da: 'Danés',
+    fi: 'Finlandés', no: 'Noruego', id: 'Indonesio', ms: 'Malayo'
+  };
+
+  const PAGE_TRANSLATORS = [
+    { id: 'google', name: 'Google Translate', icon: '🔎', primary: true, build: (url, lang) => `https://translate.google.com/translate?sl=auto&tl=${lang}&u=${encodeURIComponent(url)}` },
+    { id: 'bing', name: 'Bing Translator', icon: '🔷', build: (url, lang) => `https://www.bing.com/translator?from=auto&to=${lang}&url=${encodeURIComponent(url)}` },
+    { id: 'yandex', name: 'Yandex Translate', icon: '🟡', build: (url, lang) => `https://translate.yandex.com/?lang=auto-${lang}&url=${encodeURIComponent(url)}` }
+  ];
+
   const state = {
     theme: localStorage.getItem('lumotheme') || 'dark',
     source: 'auto',
-    target: 'es'
+    target: 'es',
+    apiEndpoint: localStorage.getItem('lumoApiEndpoint') || DEFAULT_API_ENDPOINT,
+    detectedLang: null
   };
- 
-  // ====== DOM REFS ======
+
   const $ = id => document.getElementById(id);
   const themeToggle = $('themeToggle');
   const themeIcon = $('themeIcon');
@@ -643,11 +766,20 @@ body {
   const tabPage = $('tabPage');
   const pageUrl = $('pageUrl');
   const translatePageBtn = $('translatePageBtn');
-  const pageFrame = $('pageFrame');
-  const iframePlaceholder = $('iframePlaceholder');
+  const pageServicesList = $('pageServicesList');
+  const pagePreviewUrl = $('pagePreviewUrl');
   const toastContainer = $('toastContainer');
- 
-  // ====== THEME ======
+  const settingsToggle = $('settingsToggle');
+  const settingsPanel = $('settingsPanel');
+  const apiEndpointInput = $('apiEndpointInput');
+  const saveEndpointBtn = $('saveEndpointBtn');
+  const resetEndpointBtn = $('resetEndpointBtn');
+  const settingsStatus = $('settingsStatus');
+  const defaultEndpointDisplay = $('defaultEndpointDisplay');
+  const detectedBadge = $('detectedBadge');
+
+  defaultEndpointDisplay.textContent = new URL(DEFAULT_API_ENDPOINT).hostname;
+
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     themeIcon.textContent = theme === 'dark' ? '🌙' : '☀️';
@@ -655,12 +787,64 @@ body {
     state.theme = theme;
   }
   applyTheme(state.theme);
- 
+
   themeToggle.addEventListener('click', () => {
     applyTheme(state.theme === 'dark' ? 'light' : 'dark');
   });
- 
-  // ====== TABS ======
+
+  settingsToggle.addEventListener('click', () => {
+    const isOpen = settingsPanel.classList.toggle('open');
+    settingsToggle.classList.toggle('active', isOpen);
+    if (isOpen) {
+      apiEndpointInput.value = state.apiEndpoint;
+      apiEndpointInput.focus();
+    }
+  });
+
+  saveEndpointBtn.addEventListener('click', () => {
+    let url = apiEndpointInput.value.trim();
+    if (!url) {
+      setSettingsStatus('Ingresá una URL de instancia de LibreTranslate', 'err');
+      return;
+    }
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url;
+    }
+    try {
+      new URL(url);
+    } catch {
+      setSettingsStatus('URL inválida', 'err');
+      return;
+    }
+    state.apiEndpoint = url.replace(/\/+$/, '');
+    localStorage.setItem('lumoApiEndpoint', state.apiEndpoint);
+    setSettingsStatus('✅ Endpoint guardado: ' + state.apiEndpoint, 'ok');
+    setTimeout(() => {
+      settingsPanel.classList.remove('open');
+      settingsToggle.classList.remove('active');
+    }, 1200);
+  });
+
+  resetEndpointBtn.addEventListener('click', () => {
+    state.apiEndpoint = DEFAULT_API_ENDPOINT;
+    localStorage.removeItem('lumoApiEndpoint');
+    apiEndpointInput.value = DEFAULT_API_ENDPOINT;
+    setSettingsStatus('↺ Endpoint restaurado: ' + DEFAULT_API_ENDPOINT, 'ok');
+  });
+
+  function setSettingsStatus(msg, type) {
+    settingsStatus.textContent = msg;
+    settingsStatus.className = 'settings-status visible ' + type;
+    setTimeout(() => { settingsStatus.className = 'settings-status'; }, 3000);
+  }
+
+  apiEndpointInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveEndpointBtn.click();
+    }
+  });
+
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => {
@@ -674,84 +858,150 @@ body {
       tabPage.hidden = tab !== 'page';
     });
   });
- 
-  // ====== CHAR COUNT ======
-  sourceText.addEventListener('input', () => {
+
+  function updateCharCount() {
     const len = sourceText.value.length;
     charCount.textContent = `${len} / 5000`;
-  });
- 
-  // ====== SWAP LANGUAGES ======
+  }
+
+  sourceText.addEventListener('input', updateCharCount);
+  updateCharCount();
+
+  function getDetectedLangName(code) {
+    return LANG_NAMES[code] || code;
+  }
+
+  function showDetectedLang(code) {
+    if (code && code !== 'auto') {
+      const name = getDetectedLangName(code);
+      detectedBadge.textContent = `🌍 ${name.charAt(0).toUpperCase() + name.slice(1)}`;
+      detectedBadge.classList.add('visible');
+    } else {
+      detectedBadge.classList.remove('visible');
+    }
+  }
+
   swapBtn.addEventListener('click', () => {
     const src = sourceLang.value;
     const tgt = targetLang.value;
-    if (src === 'auto') {
-      showToast('⚠️ Seleccioná un idioma origen para intercambiar', 'warning');
+
+    if (src === 'auto' && !state.detectedLang) {
+      showToast('⚠️ Traducí primero o seleccioná un idioma origen para intercambiar', 'warning');
       return;
     }
+
+    const actualSrc = (src === 'auto' && state.detectedLang) ? state.detectedLang : src;
+
+    if (actualSrc === tgt) {
+      showToast('⚠️ Los idiomas son iguales', 'warning');
+      return;
+    }
+
     sourceLang.value = tgt;
-    targetLang.value = src;
+    targetLang.value = actualSrc;
     state.source = tgt;
-    state.target = src;
-    // Swap text content too
-    const inputText = sourceText.value;
+    state.target = actualSrc;
+    state.detectedLang = null;
+    showDetectedLang(null);
+
     const outputText = outputArea.textContent;
     if (outputText && !outputArea.querySelector('.placeholder') && !outputArea.querySelector('.loading')) {
       sourceText.value = outputText;
-      outputArea.innerHTML = `<span class="placeholder">🌉 Traducción intercambiada…</span>`;
+      outputArea.innerHTML = '<span class="placeholder">🌉 Traducción intercambiada…</span>';
     }
-    charCount.textContent = `${sourceText.value.length} / 5000`;
+    updateCharCount();
     showToast('🔄 Idiomas intercambiados', 'success');
   });
- 
-  // ====== TRANSLATION API ======
-  const TRANSLATE_API = 'https://libretranslate.com/translate';
-  const DETECT_API = 'https://libretranslate.com/detect';
- 
-  async function translateText(text, source, target) {
-    if (!text.trim()) throw new Error('📭 No hay texto para traducir');
- 
-    let detectedSource = source;
-    if (source === 'auto' && text.trim().length > 2) {
-      try {
-        const detectRes = await fetch(DETECT_API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ q: text.substring(0, 200) })
-        });
-        if (detectRes.ok) {
-          const detectData = await detectRes.json();
-          if (detectData && detectData.length > 0) {
-            detectedSource = detectData[0].language;
-          }
-        }
-      } catch (e) {
-        // fallback: just use auto
-        console.warn('Detection failed, using auto', e);
+
+  function getApiEndpoints() {
+    const endpoints = [];
+    if (state.apiEndpoint) {
+      endpoints.push(state.apiEndpoint);
+    }
+    for (const ep of FALLBACK_ENDPOINTS) {
+      if (!endpoints.includes(ep)) {
+        endpoints.push(ep);
       }
     }
- 
-    const res = await fetch(TRANSLATE_API, {
+    return endpoints;
+  }
+
+  async function callTranslate(endpoint, text, source, target) {
+    const url = endpoint.replace(/\/+$/, '') + '/translate';
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         q: text,
-        source: detectedSource === 'auto' ? 'auto' : detectedSource,
+        source: source,
         target: target,
         format: 'text'
       })
     });
- 
+
+    if (res.status === 403) {
+      throw new Error('API key requerida o acceso denegado en ' + new URL(endpoint).hostname);
+    }
+    if (res.status === 429) {
+      throw new Error('Límite de peticiones excedido en ' + new URL(endpoint).hostname + '. Probá con otra instancia.');
+    }
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
-      throw new Error(`⚠️ Error del servidor (${res.status})${errText ? ': ' + errText : ''}`);
+      throw new Error(`Error ${res.status} en ${new URL(endpoint).hostname}${errText ? ': ' + errText.slice(0, 100) : ''}`);
     }
- 
+
     const data = await res.json();
     return data.translatedText || '';
   }
- 
-  // ====== TRANSLATE ======
+
+  async function callDetect(endpoint, text) {
+    const url = endpoint.replace(/\/+$/, '') + '/detect';
+    const detectText = text.length > 500 ? text.substring(0, 500) : text;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: detectText })
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data && data.length > 0) return data[0].language;
+    return null;
+  }
+
+  async function translateWithCascade(text, source, target) {
+    const endpoints = getApiEndpoints();
+    let lastError = null;
+
+    let detectedSource = source;
+    if (source === 'auto' && text.trim().length > 2) {
+      for (const ep of endpoints) {
+        try {
+          const lang = await callDetect(ep, text);
+          if (lang) {
+            detectedSource = lang;
+            break;
+          }
+        } catch (e) {
+          console.warn('Detect failed on', ep, e);
+          lastError = e;
+        }
+      }
+    }
+
+    for (const ep of endpoints) {
+      try {
+        const result = await callTranslate(ep, text, detectedSource === 'auto' ? 'auto' : detectedSource, target);
+        return { translatedText: result, detectedLanguage: detectedSource === source ? null : detectedSource };
+      } catch (e) {
+        console.warn('Translate failed on', ep, e);
+        lastError = e;
+      }
+    }
+
+    if (lastError) throw lastError;
+    throw new Error('No hay instancias de LibreTranslate disponibles. Configurá una propia en ⚙️.');
+  }
+
   async function performTranslation() {
     const text = sourceText.value.trim();
     if (!text) {
@@ -759,42 +1009,67 @@ body {
       sourceText.focus();
       return;
     }
- 
+
     const source = sourceLang.value;
     const target = targetLang.value;
- 
-    outputArea.innerHTML = `<div class="loading">⏳ Traduciendo <span style="font-size:10px;">⋯</span></div>`;
- 
+
+    outputArea.innerHTML = '<div class="loading">⏳ Traduciendo <span style="font-size:10px;">⋯</span></div>';
+    translateBtn.disabled = true;
+
     try {
-      const result = await translateText(text, source, target);
-      outputArea.textContent = result;
+      const result = await translateWithCascade(text, source, target);
+
+      if (result.detectedLanguage) {
+        state.detectedLang = result.detectedLanguage;
+        showDetectedLang(result.detectedLanguage);
+        const detectedName = getDetectedLangName(result.detectedLanguage);
+        const targetName = getDetectedLangName(target);
+        outputArea.innerHTML = `<span class="detected-info">🌍 ${detectedName.charAt(0).toUpperCase() + detectedName.slice(1)} → ${targetName.charAt(0).toUpperCase() + targetName.slice(1)}</span>${escapeHtml(result.translatedText)}`;
+      } else {
+        state.detectedLang = null;
+        showDetectedLang(null);
+        outputArea.textContent = result.translatedText;
+      }
       showToast('✅ Traducción completada', 'success');
     } catch (err) {
       console.error('Translation error:', err);
-      outputArea.innerHTML = `<span style="color:#ff4060;">❌ ${err.message}</span>`;
-      showToast(`❌ ${err.message}`, 'error');
+      let msg = err.message;
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        msg = '🌐 Error de conexión. Verificá la URL del API en ⚙️ o probá más tarde.';
+      } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+        msg = '🌐 Error de red. ¿Tiene CORS habilitado el servidor? Configurá en ⚙️.';
+      }
+      outputArea.innerHTML = `<span style="color:var(--error);">❌ ${escapeHtml(msg)}</span>`;
+      showToast(`❌ ${msg}`, 'error');
+    } finally {
+      translateBtn.disabled = false;
     }
   }
- 
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
   translateBtn.addEventListener('click', performTranslation);
- 
-  // Ctrl/Cmd + Enter shortcut
+
   sourceText.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
       performTranslation();
     }
   });
- 
-  // ====== CLEAR ======
+
   clearBtn.addEventListener('click', () => {
     sourceText.value = '';
-    outputArea.innerHTML = `<span class="placeholder">🌉 La traducción aparecerá aquí…</span>`;
-    charCount.textContent = `0 / 5000`;
+    outputArea.innerHTML = '<span class="placeholder">🌉 La traducción aparecerá aquí…</span>';
+    updateCharCount();
+    state.detectedLang = null;
+    showDetectedLang(null);
     sourceText.focus();
   });
- 
-  // ====== COPY ======
+
   copyBtn.addEventListener('click', async () => {
     const text = outputArea.textContent;
     if (!text || outputArea.querySelector('.placeholder') || outputArea.querySelector('.loading')) {
@@ -805,7 +1080,6 @@ body {
       await navigator.clipboard.writeText(text);
       showToast('📋 Copiado al portapapeles', 'success');
     } catch {
-      // Fallback
       const ta = document.createElement('textarea');
       ta.value = text;
       document.body.appendChild(ta);
@@ -815,8 +1089,7 @@ body {
       showToast('📋 Copiado al portapapeles', 'success');
     }
   });
- 
-  // ====== SPEAK ======
+
   speakBtn.addEventListener('click', () => {
     const text = outputArea.textContent;
     if (!text || outputArea.querySelector('.placeholder') || outputArea.querySelector('.loading')) {
@@ -827,11 +1100,9 @@ body {
       showToast('🔇 Tu navegador no soporta síntesis de voz', 'error');
       return;
     }
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     const targetLangVal = targetLang.value;
-    // Map codes to BCP 47 tags
     const langMap = {
       'en': 'en-US', 'es': 'es-ES', 'fr': 'fr-FR', 'de': 'de-DE',
       'it': 'it-IT', 'pt': 'pt-PT', 'ru': 'ru-RU', 'ja': 'ja-JP',
@@ -844,13 +1115,62 @@ body {
     utterance.lang = langMap[targetLangVal] || 'es-ES';
     utterance.rate = 0.9;
     utterance.pitch = 1;
+
+    const voices = window.speechSynthesis.getVoices();
+    const matchingVoice = voices.find(v => v.lang.startsWith(targetLangVal));
+    if (matchingVoice) {
+      utterance.voice = matchingVoice;
+    }
+
     utterance.onstart = () => showToast('🔊 Reproduciendo…', 'success');
     utterance.onend = () => showToast('✅ Reproducción finalizada', 'success');
-    utterance.onerror = () => showToast('🔇 Error al reproducir', 'error');
+    utterance.onerror = (e) => {
+      if (e.error === 'not-allowed') {
+        showToast('🔇 Permiso de voz denegado por el navegador', 'error');
+      } else {
+        showToast('🔇 Error al reproducir', 'error');
+      }
+    };
     window.speechSynthesis.speak(utterance);
   });
- 
-  // ====== PAGE TRANSLATION ======
+
+  if (window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+  }
+
+  function updatePagePreview() {
+    const url = pageUrl.value.trim();
+    if (url) {
+      const target = pageLang.value;
+      const primaryTranslator = PAGE_TRANSLATORS.find(t => t.primary);
+      const fullUrl = primaryTranslator.build(url, target);
+      pagePreviewUrl.textContent = fullUrl;
+      pagePreviewUrl.style.cursor = 'pointer';
+      pagePreviewUrl.onclick = () => window.open(fullUrl, '_blank', 'noopener');
+    } else {
+      pagePreviewUrl.textContent = 'Ingresá una URL para ver la traducción';
+      pagePreviewUrl.style.cursor = 'default';
+      pagePreviewUrl.onclick = null;
+    }
+  }
+
+  function renderPageServices() {
+    const url = pageUrl.value.trim();
+    if (!url) {
+      pageServicesList.innerHTML = '';
+      return;
+    }
+
+    const target = pageLang.value;
+    let html = '';
+    for (const translator of PAGE_TRANSLATORS) {
+      const href = translator.build(url, target);
+      const cls = translator.primary ? 'page-service-link primary' : 'page-service-link';
+      html += `<a href="${escapeHtml(href)}" target="_blank" rel="noopener" class="${cls}">${translator.icon} ${escapeHtml(translator.name)}</a>`;
+    }
+    pageServicesList.innerHTML = html;
+  }
+
   function translatePage() {
     let url = pageUrl.value.trim();
     if (!url) {
@@ -858,29 +1178,23 @@ body {
       pageUrl.focus();
       return;
     }
-    // Add https:// if missing
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = 'https://' + url;
       pageUrl.value = url;
     }
-    // Basic URL validation
     try { new URL(url); } catch {
       showToast('❌ URL inválida. Probá con https://ejemplo.com', 'error');
       return;
     }
- 
+
     const target = pageLang.value;
-    // Use Google Translate's proxy — it's the most reliable way
-    // Google Translate proxy URL format:
-    const proxyUrl = `https://translate.google.com/translate?hl=${target}&sl=auto&tl=${target}&u=${encodeURIComponent(url)}&sandbox=1`;
- 
-    iframePlaceholder.style.display = 'none';
-    pageFrame.style.display = 'block';
-    pageFrame.src = proxyUrl;
- 
-    showToast(`🌐 Traduciendo página a ${pageLang.options[pageLang.selectedIndex].text}`, 'success');
+    const primaryTranslator = PAGE_TRANSLATORS.find(t => t.primary);
+    const proxyUrl = primaryTranslator.build(url, target);
+
+    window.open(proxyUrl, '_blank', 'noopener');
+    showToast('🌐 Abriendo traducción en nueva pestaña…', 'success');
   }
- 
+
   translatePageBtn.addEventListener('click', translatePage);
   pageUrl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
@@ -888,8 +1202,15 @@ body {
       translatePage();
     }
   });
- 
-  // ====== TOAST SYSTEM ======
+  pageUrl.addEventListener('input', () => {
+    updatePagePreview();
+    renderPageServices();
+  });
+  pageLang.addEventListener('change', () => {
+    updatePagePreview();
+    renderPageServices();
+  });
+
   function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = 'toast';
@@ -899,19 +1220,24 @@ body {
       if (toast.parentNode) toast.remove();
     }, 3000);
   }
- 
-  // ====== AUTO-SAVE LANGUAGE PREFS ======
-  sourceLang.addEventListener('change', () => { state.source = sourceLang.value; });
+
+  sourceLang.addEventListener('change', () => {
+    state.source = sourceLang.value;
+    if (sourceLang.value !== 'auto') {
+      state.detectedLang = null;
+      showDetectedLang(null);
+    }
+  });
   targetLang.addEventListener('change', () => { state.target = targetLang.value; });
- 
-  // ====== INITIAL FOCUS ======
+
   sourceText.focus();
- 
-  // ====== MOBILE FRIENDLY: hide iframe on scroll ======
-  // (handled by CSS)
- 
+
+  if (state.apiEndpoint !== DEFAULT_API_ENDPOINT) {
+    apiEndpointInput.value = state.apiEndpoint;
+  }
+
   console.log('🌐 LumoTranslate loaded. Happy translating!');
-  console.log('📖 Open source — contribute at https://github.com/your-org/lumotranslate');
+  console.log('📖 Open source — contribute at https://github.com/liblaper/LumaTranslator');
 })();
 </script>
 </body>
